@@ -24,6 +24,11 @@ est présenté avec son contexte, sa chaîne de résolution complète et les le�
 | The Man Who Sold The World | Silent Noise, The Real Slim Shady, Back Door Man, Pattern of Life, Safe Home | 100 à 200 | 4/5 résolues | [jeopardy/man-who-sold-the-world.md](jeopardy/man-who-sold-the-world.md) |
 | Node To Nowhere | The Five of THOR, Connecting the Dots | 200 | 2/2 résolues | [jeopardy/node-to-nowhere.md](jeopardy/node-to-nowhere.md) |
 | Kiss of Death | Zebulon, Papyrus, Dreamer, Poseidon… | 50 à 500 | plusieurs résolues | [jeopardy/kiss-of-death.md](jeopardy/kiss-of-death.md) |
+| The Fall Of JANUS | Ransomless, The Trojan Horse, New Blood, Royal Heist | 4 × 100 | 3/4 résolues | [jeopardy/fall-of-janus.md](jeopardy/fall-of-janus.md) |
+| Broken relay | Dirty Story, Broken channel, Conspiracy | 3 × 100 | 2/3 résolues | [jeopardy/broken-relay.md](jeopardy/broken-relay.md) |
+| The Fugitive | Ghost Passenger → Last Port of Call (6 questions) | 200 (mission) | 6/6 résolues | [jeopardy/the-fugitive.md](jeopardy/the-fugitive.md) |
+| GHOST RATCHET | NordLink (ratchet Android/crypto) | 100 | résolue | [jeopardy/ghost-ratchet.md](jeopardy/ghost-ratchet.md) |
+| Contingency Protocol | Override (web3) | 200 | résolue | [jeopardy/contingency-protocol.md](jeopardy/contingency-protocol.md) |
 | Toguro Tempest | Gitea (web) | 200 | résolue | [jeopardy/toguro-tempest.md](jeopardy/toguro-tempest.md) |
 | Tervalis (AD) | File Vault, Silent Broker | 200 | File Vault résolue | [jeopardy/tervalis-ad.md](jeopardy/tervalis-ad.md) |
 | Human After All | Human After All 1 (misc) | 100 | résolue | [jeopardy/human-after-all.md](jeopardy/human-after-all.md) |
@@ -44,8 +49,9 @@ est présenté avec son contexte, sa chaîne de résolution complète et les le�
 
 ### Challenges non résolus (rétrospective)
 
-[non-resolus.md](non-resolus.md) — Safe Home (P5), The Scorpion's Lair, Sealed Order,
-Deep Archive, The Gate, Canary… avec l'état des investigations et les leçons tirées.
+[non-resolus.md](non-resolus.md) — Safe Home (P5), Royal Heist, Conspiracy,
+Welcome Back / Game On, The Scorpion's Lair, Sealed Order, Deep Archive, The Gate,
+Canary, Zebulon… avec l'état des investigations et les leçons tirées.
 
 ## Leçons transverses
 
