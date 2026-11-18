@@ -1,101 +1,120 @@
-# Aizen — mission complète (web / pwn / rev / forensics)
+# Aizen — mission complète (web, pwn, reverse, forensics)
 
-**Catégorie** : mission multi-questions (web, pwn, rev, forensics) — 4 × 200 pts
-**Auteur** : 5c0r7 — **Équipe** : DIVISION_0 — **Statut** : 3/4 résolues par nous, 4/4 équipe
+**Catégorie** : mission multi-questions — 4 × 200 points
+**Auteur** : 5c0r7 — **Équipe** : DIVISION_0 — **Statut** : trois questions résolues par
+nous, la quatrième par un coéquipier.
+
+Cette mission met en scène le vol d'un coffre-fort numérique à travers quatre
+disciplines : exploitation web, corruption de mémoire, rétro-ingénierie et forensique.
 
 ---
 
-## Q1 — Cagliostro (web, 200 pts)
+## Q1 — Cagliostro (web, 200 points)
 
-**Flag** : `HLB2026{a24c076c09d485af5c79fff8fd7c3f8c}}` (double `}}` volontaire, vérifié par hash)
+**Flag** : `HLB2026{a24c076c09d485af5c79fff8fd7c3f8c}}` — le double `}}` est volontaire
+de la part de l'auteur ; la valeur a été vérifiée par hachage avant toute conclusion.
 
-**Cible** : Vantage Hosting `172.28.27.2:5000` — portail de coffres-forts numériques.
+**Cible** : Vantage Hosting (`172.28.27.2:5000`), un portail de coffres-forts numériques.
 
-### Chaîne
+### Chaîne de résolution
 
-1. **Login guest** → session par cookie **JWT HS256**.
-2. **Double-URL-encoding traversal** : le filtre supprime `..` et `/` **avant** un second
-   `unquote()`. Un chemin encodé deux fois passe le filtre puis se décode au moment de l'ouverture :
+1. **Connexion en invité** : la session repose sur un cookie **JWT signé en HS256**.
+2. **Traversée de répertoire à double encodage URL** : l'application filtre `..` et `/`
+   **avant** d'appliquer un second `unquote()`. Un chemin encodé deux fois traverse donc
+   le filtre, puis se décode au moment de l'ouverture du fichier :
 
    ```
    GET /vault/3/download?f=%252fetc%252fpasswd
    ```
 
-3. **LFI** → lecture de `/app/app.py` et `/app/.env` :
-   - `JWT_SECRET=11045f3d...` = `sha256(FLAG + ":jwt")[:48]`
-4. **Forge de JWT admin** avec le secret récupéré → accès aux routes `/backups`,
-   `/certificates`, `/network`.
-5. **SSRF WeasyPrint** : `POST /admin/vault/3/settings` avec une description contenant
-   `<img src=http://127.0.0.1:8080/flag.svg>` → le générateur PDF interne charge la ressource.
-6. `GET /admin/vault/3/export` → le PDF exporté contient le flag (extraction via pdfminer).
+3. **Lecture de fichier arbitraire** : on récupère `/app/app.py` puis `/app/.env`, qui
+   contient `JWT_SECRET=11045f3d...`, égal à `sha256(FLAG + ":jwt")[:48]`.
+4. **Forge d'un JWT d'administrateur** avec ce secret, ce qui débloque les routes
+   `/backups`, `/certificates` et `/network`.
+5. **SSRF via WeasyPrint** : la requête `POST /admin/vault/3/settings` accepte une
+   description HTML ; on y insère `<img src=http://127.0.0.1:8080/flag.svg>` afin que le
+   générateur de PDF interne résolve la ressource locale.
+6. `GET /admin/vault/3/export` produit le PDF d'export, dont on extrait le flag avec
+   pdfminer.
 
-### Leurre
+### Leurre à connaître
 
-Craquer le JWT (john, HMAC msg#sig) est inutile : **la signature était correcte**, le secret
-fuit via la LFI.
+Craquer le JWT (attaque HMAC sur les paires message/signature) est une impasse : **la
+signature était valide**. Le secret fuit par la lecture de fichier, c'est là qu'il
+fallait chercher.
 
 ---
 
-## Q2 — Ishikawa Goemon (pwn, 200 pts)
+## Q2 — Ishikawa Goemon (pwn, 200 points)
 
 **Flag** : `HLB2026{9b3c0adc385cad6dbf940e5d4bbe3bbd}`
 
-**Cible** : HSM Key Controller `vault-keyctl`, `172.28.29.2:9000`.
+**Cible** : contrôleur de clés HSM `vault-keyctl` (`172.28.29.2:9000`).
 
-### Deux bugs combinés
+### Deux défauts combinés
 
-1. **Off-by-one NUL** : un PIN de 16 caractères écrit un NUL à `rsp+0x30`, écrasant le byte
-   « seal » de validation.
-2. **Overflow 16 bits du Token Market** : commander `65536` tokens fait boucler le compteur
-   de coût → achat gratuit.
+1. **Débordement d'un octet nul** : un PIN de 16 caractères écrit un octet nul à
+   `rsp+0x30`, qui écrase l'indicateur « seal » de validation.
+2. **Débordement d'entier 16 bits dans le marché de tokens** : commander 65 536 tokens
+   fait boucler le compteur de coût, ce qui rend l'achat gratuit.
 
-### Chaîne
+### Chaîne d'exploitation
 
 ```
-register → market (65536 tokens) → allocate 1 key pair → Master Key Export (PIN 16 chars)
+register → market (65 536 tokens) → allocate 1 key pair → Master Key Export (PIN 16 caractères)
 ```
 
-Le FNV-1a du PIN est du code mort : seule la corruption du byte seal compte.
+Le calcul de FNV-1a sur le PIN est du code mort : seule la corruption de l'indicateur
+seal conditionne l'export.
 
 ---
 
-## Q3 — Fujiko Mine (rev, 200 pts)
+## Q3 — Fujiko Mine (reverse, 200 points)
 
 **Flag** : `HLB2026{60fa4abd3f8dd79a1455348e9db86aa9}`
 
-**Cible** : Vault Handout `172.28.44.2:8080` — `vault-tool` (stripped, PIE) avec seulement
-`info`/`verify` exposés. Le « code mort » contient les primitives réelles.
+**Cible** : Vault Handout (`172.28.44.2:8080`) — le binaire `vault-tool`, dépouillé de
+ses symboles et compilé en PIE, n'expose que les commandes `info` et `verify`. Les
+primitives réelles du coffre se trouvent dans le **code mort**.
 
-### Chaîne de déchiffrement du coffre
+### Chaîne de déchiffrement
 
-1. **KEK = Feistel8(master, hdr[0x20:0x30])** — la clé 16 o = salt 8 o + 8 o suivants.
-2. **KWRAP custom** : `t XOR` avant déchiffrement ECB, `t = i + (6-r)(n-1)`, 6 rounds,
-   sur **hdr[0x40:0x68]**.
-3. Clé contenu → **AES-256-CBC** avec **IV = hdr[0x30:0x40]** (juste avant le blob —
-   l'offset « évident » était faux).
-4. gzip + PKCS#7 → TAR (plans de câblage Tervalis) → flag.
+1. **KEK = Feistel8(master, hdr[0x20:0x30])** : la clé de 16 octets est constituée du
+   sel de 8 octets suivi des 8 octets suivants — un agencement peu intuitif.
+2. **KWRAP personnalisé** : un XOR par bloc `t` avant le déchiffrement ECB, avec
+   `t = i + (6 − r)(n − 1)` sur 6 rounds, appliqué à **hdr[0x40:0x68]**.
+3. Clé du contenu obtenue, puis **AES-256-CBC** avec **IV = hdr[0x30:0x40]** — l'IV se
+   trouve juste avant le blob chiffré, et non à l'offset « évident ».
+4. Décompression gzip, désassemblage PKCS#7, extraction du TAR (plans de câblage de
+   Tervalis) puis du flag.
 
-### Méthode gagnante
+### Méthode qui a fait la différence
 
-- ~60 000 combinaisons « raisonnables » KO avant de scanner le **produit cartésien complet**
-  des primitives natives via `ctypes` (PIE neutralisé en effaçant `DT_FLAGS_1`/PIE bit).
-- Oracle gratuit : la constante AIV `a6a6` du KWRAP valide les candidats.
+- Environ 60 000 combinaisons « raisonnables » ont échoué avant que l'on scanne le
+  **produit cartésien complet** des primitives natives via `ctypes` (le bit PIE de
+  `DT_FLAGS_1` étant neutralisé pour charger le binaire comme bibliothèque).
+- Un oracle gratuit valide chaque candidat : la constante AIV `a6a6` du KWRAP.
 
 ### Leçons
 
-- Les noms de suite du header (`FEISTEL8-KWRAP-CBC256`) décrivent **vraiment** la chaîne.
-- Quand un binaire fournit des primitives natives validées, ne pas réimplémenter : les
-  appeler toutes.
+- Les noms de suite inscrits dans l'en-tête (`FEISTEL8-KWRAP-CBC256`) décrivent
+  **réellement** la chaîne cryptographique : ne pas inventer une structure plus subtile
+  que celle qui est annoncée.
+- Lorsqu'un binaire fournit des primitives natives validées, les appeler toutes
+  systématiquement plutôt que les réimplémenter.
 
 ---
 
-## Q4 — Zenigata (forensics, 200 pts)
+## Q4 — Zenigata (forensics, 200 points)
 
-Image disque du poste de la salle serveur — résolue par un autre membre de l'équipe
-(chaîne non re-dérivable depuis nos notes : à compléter).
+Image disque du poste de la salle serveur — résolue par un coéquipier ; la chaîne
+détaillée sera complétée à partir de ses notes.
 
-## Leçons transverses
+---
 
-- Challenges « l'outil refuse sans HSM » = reverse du code mort, pas d'attaque du binaire.
-- Instances éphémères : faire tout le offline d'abord (les 3 fichiers suffisent), le flag
-  est statique.
+## Synthèse pédagogique
+
+- Un challenge du type « l'outil refuse de fonctionner sans HSM » se résout par la
+  rétro-ingénierie du code mort, non par une attaque du binaire exposé.
+- Face à des instances éphémères, traiter d'abord tout ce qui est hors ligne : les
+  trois fichiers suffisent, et le flag est statique.

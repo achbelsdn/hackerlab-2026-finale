@@ -1,86 +1,101 @@
-# Kiss of Death — mission téléphone / forensics (Zebulon, Papyrus, Dreamer…)
+# Kiss of Death — mission téléphone et forensique (Zebulon, Papyrus, Dreamer…)
 
-**Catégorie** : misc / forensics / OSINT — **Équipe** : DIVISION_0
-**Statut** : plusieurs questions résolues, format des flags = placeholders littéraux du tag
+**Catégorie** : misc, forensique, OSINT — **Équipe** : DIVISION_0 — **Statut** :
+plusieurs questions résolues.
 
-Leçon structurante de cette mission : **le tag `flag:HLB2026{...}` du panneau mission est
-le placeholder du format EXACT** (ex. `flag:HLB2026{ApplicationName:Code}` → le flag final
-est littéralement `ApplicationName:Code` avec underscores pour les espaces).
+La leçon structurante de cette mission tient en une phrase : **la balise
+`flag:HLB2026{...}` affichée sur le panneau d'une mission est le gabarit exact du flag
+attendu** (par exemple `flag:HLB2026{ApplicationName:Code}` annonce littéralement
+`ApplicationName:Code`, avec des underscores à la place des espaces).
 
 ---
 
-## Zebulon — Q5 (300 pts)
+## Zebulon — Q5 (300 points)
 
 **Flag** : `HLB2026{Boussole:114° ESE}`
 
 ### Résolution
 
-1. Dump ADB d'un téléphone (207.180.205.54:5555, root) : FS minimal — `gesture.key`,
-   `locksettings.db`, `users/0.xml` (`Dritan`), app `com.coffreplus.vault` (vide),
-   `/data/local/tmp/notes.txt` : *« Rappel: verrouiller le tel. Schema change tous les
+1. Extraction ADB d'un téléphone (`207.180.205.54:5555`, accès root) : système de
+   fichiers minimal — `gesture.key`, `locksettings.db`, `users/0.xml` (utilisateur
+   « Dritan »), application `com.coffreplus.vault` vide, et
+   `/data/local/tmp/notes.txt` : *« Rappel : verrouiller le tel. Schema change tous les
    mois. »*
-2. Le profil leurre liste des applications dans un ordre codé (`TMGCHCBP`) ; l'app
-   **Boussole** affiche un azimut.
-3. Le serveur du challenge expose `/api/unlock`, `/api/real`, `/api/file` — aucun
-   endpoint de validation d'un PIN Coffre+ (26 endpoints sondés → `not found`).
-4. Le flag attendu est la chaîne **telle qu'affichée par l'UI** de la Boussole :
-   nombre + unité + cardinal → `HLB2026{Boussole:114° ESE}` (accepté après ~360 essais ;
-   les variantes `:114`, `:114°`, `:0114`, `:3:48`… étaient toutes refusées).
+2. Le profil leurre liste des applications dans un ordre codé (`TMGCHCBP`) ; parmi elles,
+   l'application **Boussole** affiche un azimut.
+3. Le serveur du challenge n'expose que `/api/unlock`, `/api/real` et `/api/file` —
+   aucun point d'entrée ne valide un code de coffre (26 chemins supplémentaires sondés,
+   tous en `not found`).
+4. Le flag attendu est la chaîne **telle qu'affichée par l'interface** de la Boussole :
+   valeur, unité et point cardinal, soit `HLB2026{Boussole:114° ESE}`. Toutes les
+   variantes partielles (`:114`, `:114°`, `:0114`, `:3:48`…) étaient refusées.
 
-**Leçon** : le « Code » d'un flag `{ApplicationName:Code}` peut être la chaîne TELLE
-QU'AFFICHÉE par l'interface (valeur + unité + cardinal), pas la valeur nue.
+**Leçon** : le « code » d'un flag de la forme `{ApplicationName:Code}` peut être la
+chaîne telle qu'elle s'affiche à l'écran (valeur, unité, cardinal), et non la valeur
+nue. Observer l'interface avant de normaliser les données.
 
 ---
 
-## Papyrus — Q6 (300 pts)
+## Papyrus — Q6 (300 points)
 
 **Flag** : `HLB2026{CERT-TVS-2026-IR-001}`
 
 ### Résolution
 
-Corpus de 6 incidents attribués à l'APT **Lynx Varelien (VARELID)** / **VARELCORP
-Solutions** (contact `mateus.varga@varelcorp.var`) :
+Le corpus décrit six incidents attribués à l'APT **Lynx Varelien (VARELID)** et à la
+société **VARELCORP Solutions** (contact `mateus.varga@varelcorp.var`) :
 
-- **Jon Varek** (ing. AquaTerv) = source interne de la fuite (métadonnées DOCX, DarkVault) ;
-- `j.aterbe@bct.gov.trv` victime de phishing `.docm` via le domaine homographe
-  `xn--varelcrp-s4a.var` ;
-- Marc de Lacroix (BCT) victime ; Anastas Volkov (Bank One Limited) destinataire.
+- **Jon Varek** (ingénieur chez AquaTerv) est la source interne de la fuite
+  (métadonnées de documents DOCX, plateforme DarkVault) ;
+- `j.aterbe@bct.gov.trv` est victime d'un hameçonnage par pièce jointe `.docm`
+  provenant du domaine homoglyphe `xn--varelcrp-s4a.var` ;
+- Marc de Lacroix (BCT) est également victime ; Anastas Volkov (Bank One Limited)
+  figure parmi les destinataires.
 
-Le flag = l'identifiant du rapport d'incident de référence : `HLB2026{CERT-TVS-2026-IR-001}`.
+Le flag est l'identifiant du rapport d'incident de référence :
+`HLB2026{CERT-TVS-2026-IR-001}`.
 
 **Bonus P5** : `HLB2026{3p4n3t_fl0w_c0mpr0m1s3d}` — clé EPANET utilisée pour
-l'Operation Tervalis (SCADA).
+l'opération Tervalis (systèmes de contrôle industriels).
 
 ---
 
-## Dreamer — Q7 (50 pts)
+## Dreamer — Q7 (50 points)
 
 **Flag** : `HLB2026{25/08/2026 09:46 31415926}`
 
 ### Résolution
 
-1. Points de traçance **imprimante** (tracking dots DEDA — yellow dots) sur un document
-   imprimé : décodage via `libdeda` (paquet PyPI `deda`, github dfd-tud/deda).
-2. Extraction : date/heure d'impression + numéro de série/identifiant de la machine.
-3. Format = `date heure identifiant` tels qu'imprimés.
+1. Le document imprimé porte des **points de traçance d'imprimante** (marqueurs jaunes,
+  « tracking dots ») : leur décodage passe par l'outil `libdeda` (paquet PyPI `deda`,
+  dépôt dfd-tud/deda).
+2. Le décodage restitue la date et l'heure d'impression ainsi que l'identifiant de la
+   machine.
+3. Le flag suit le format `date heure identifiant`, tel qu'imprimé.
 
-**Pièges** :
-- Le flag a été **rejeté puis accepté ~2 h plus tard** : l'auteur corrigeait le flag
-  plateforme en même temps qu'il publiait les hints (« Yellow dots »). Ne jamais conclure
-  trop vite sur un rejet.
-- Un script de soumission avait `chal=274` en dur → un batch entier a été testé sur la
-  mauvaise question (`already_solved` trompeur). Toujours paramétrer l'ID.
+**Deux pièges à retenir** :
+
+- Le flag a été **corrigé par l'organisateur en cours d'épreuve**, en même temps que la
+  publication des indices (« Yellow dots ») : un refus initial ne signe pas une réponse
+  fausse lorsque la piste est solide.
+- Un outil interne avait l'identifiant de challenge codé en dur sur la mauvaise question,
+  ce qui a faussé un lot entier de vérifications. Toujours paramétrer l'identifiant de
+  challenge dans ses outils, et relire l'énoncé ciblé avant toute conclusion.
 
 ---
 
-## Poseidon — Q8 (500 pts)
+## Poseidon — Q8 (500 points)
 
-Validée (solve utilisateur) — chaîne non re-dérivable depuis nos notes.
+Question validée par un coéquipier ; la chaîne détaillée sera complétée à partir de ses
+notes.
 
-## Autres questions de la mission
+---
 
-- Q3 (tag `flag:HLB2026{password_NbrObjetsScelles}` / `flag:HLB2026{password}`) :
-  deux formats acceptés par l'auteur.
-- Le CSS de `served.html` contenait un écran **VAULT complet jamais utilisé** par le JS
-  (`.vaultwrap/.pindisp/.keys/.secret/.flag`) : l'écran PIN Coffre+ qui affiche le flag
-  final était prévu mais non câblé — indice d'un challenge possiblement incomplet.
+## Autres éléments de la mission
+
+- La question 3 admettait **deux formats** de flag (mot de passe seul, ou mot de passe
+  suivi du nombre d'objets scellés) — un cas rare où l'auteur accepte deux réponses.
+- La feuille de style de `served.html` contenait un écran **VAULT complet jamais
+  utilisé** par le code JavaScript (`.vaultwrap`, `.pindisp`, `.keys`, `.secret`,
+  `.flag`) : l'écran de code du Coffre+ censé afficher le flag final était prévu mais
+  non câblé — un indice précieux sur l'état d'achèvement du challenge.

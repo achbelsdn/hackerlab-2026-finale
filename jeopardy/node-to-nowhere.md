@@ -1,16 +1,17 @@
-# Node To Nowhere — traçage blockchain (2 questions)
+# Node To Nowhere — traçage blockchain (deux questions)
 
-**Catégorie** : forensics / blockchain — 200 pts chacun — **Équipe** : DIVISION_0
-**Statut** : 2/2 résolues (Q207 après correction organisateur, Q211 après hint officiel)
+**Catégorie** : forensique blockchain — 200 points chacune — **Équipe** : DIVISION_0
+**Statut** : les deux questions résolues, dont une après correction du flag par les
+organisateurs.
 
-Narratif : suivre le produit d'un swap THORChain depuis son point d'entrée jusqu'à sa
-destination, à travers Bitcoin et Ethereum.
+**Contexte narratif** : suivre le produit d'un échange THORChain depuis son point
+d'entrée jusqu'à sa destination finale, à travers les chaînes Bitcoin et Ethereum.
 
 ---
 
-## Q2 — The Five of THOR (200 pts)
+## Q2 — The Five of THOR (200 points)
 
-**Flag** (corrigé par l'organisateur en cours d'épreuve) :
+**Flag** (dans sa version corrigée par les organisateurs) :
 
 ```
 HLB2026{bc1qhclwkt999458pek36ukcxvh23da3ntp5vyaq4s,bc1qegtq7nsmy7knv48lsy2telxshmtutatl25qtf4,bc1qa6te8zckz0tx688af3vzvatlnfy0lvcxx5l4pk,bc1qaaneuqyjqnwm9mpsz3easnpneqslqa3nt3a98l,bc1q9e6s4kxj3yt43ts60yl4wwdgsu3enn9tjvfvgr}
@@ -18,12 +19,13 @@ HLB2026{bc1qhclwkt999458pek36ukcxvh23da3ntp5vyaq4s,bc1qegtq7nsmy7knv48lsy2telxsh
 
 ### Résolution
 
-1. Un fichier `hachage.txt` fournit 5 SHA-256. **Preuve indépendante** : chaque préimage
-   est une adresse bech32 — `sha256(bech32_addr)` = les 5 cibles, dans l'ordre du fichier.
-2. Chaque adresse reçoit directement un outbound d'un swap THORChain via une adresse
-   BTC legacy intermédiaire (sweeps datés 1740942810 / 1740944176) :
+1. Le fichier `hachage.txt` fournit cinq empreintes SHA-256. **Preuve indépendante** :
+   chaque préimage est une adresse bech32 — `sha256(adresse_bech32)` redonne les cinq
+   valeurs cibles, dans l'ordre du fichier.
+2. Chaque adresse reçoit directement une sortie d'un échange THORChain, via une adresse
+   Bitcoin legacy intermédiaire (balayages horodatés 1740942810 et 1740944176) :
 
-   | # | Adresse cible (SHA-256 préimage) | Sweep | Payout |
+   | # | Adresse cible (préimage du SHA-256) | Balayage | Paiement |
    |---|---|---|---|
    | 1 | `bc1qhclwkt…` | `2b6a2776…` | `41fb88ec…` |
    | 2 | `bc1qegtq7ns…` | `ddedc9f5…` | `e47d4949…` |
@@ -31,24 +33,25 @@ HLB2026{bc1qhclwkt999458pek36ukcxvh23da3ntp5vyaq4s,bc1qegtq7nsmy7knv48lsy2telxsh
    | 4 | `bc1qaaneuqy…` | `72eeb2d7…` | `5613931a…` |
    | 5 | `bc1q9e6s4kx…` | `37ebfc8e…` | `92716bbb…` |
 
-3. Le flag = les 5 adresses bech32 **dans l'ordre du fichier de hashes**, séparées par
-   des virgules sans espaces.
+3. Le flag est la liste des cinq adresses bech32 **dans l'ordre du fichier d'empreintes**,
+   séparées par des virgules sans espaces.
 
-### Piège majeur
+### Le point délicat
 
-~365 soumissions rejetées avant la correction organisateur : toutes les permutations
-d'ordre (temporel THOR, hauteurs de blocs), les txids de sweep/payout, les wrappers
-(`HLB2O26{...}` typo de la description), les formats avec espaces… étaient refusés alors
-que le contenu était **mathématiquement prouvé**. Le flag stocké ne correspondait à aucune
-dérivation — l'organisateur a corrigé le flag plateforme, et la soumission « obvious »
-(ordre fichier, virgules) est passée immédiatement.
+Le contenu était **mathématiquement démontré** (cinq préimages sur cinq), mais aucune
+variation de format n'était acceptée : permutations d'ordre (chronologique THOR, hauteurs
+de blocs), identifiants de balayage ou de paiement, coquilles présentes dans l'énoncé
+(`HLB2O26`), séparateurs variés. Le flag stocké ne correspondait à aucune dérivation
+possible ; les organisateurs l'ont corrigé en cours d'épreuve, et la réponse « évidente »
+(ordre du fichier, virgules) a été acceptée immédiatement après.
 
-**Leçon** : quand le contenu est prouvé et 0 solve global, c'est un bug de flag auteur —
-signaler au lieu de brute-forcer.
+**Leçon** : lorsque la réponse est démontrée et que le challenge n'a aucune résolution
+dans le classement, l'hypothèse d'un flag incohérent côté auteur doit être envisagée et
+signalée aux organisateurs, preuves à l'appui, plutôt que combattue par force brute.
 
 ---
 
-## Q6 — Connecting the Dots (200 pts)
+## Q6 — Connecting the Dots (200 points)
 
 **Flag** (validé officiellement) :
 
@@ -58,31 +61,37 @@ HLB2026{74caf0e22e82c105358bdc912840ef0e08be05d84162fd6aabaf6c85277cfb5b,3f6403f
 
 ### Résolution
 
-1. Le swap seed (midgard) : tx ETH
-   `488A4636CC6F147A0A5D574067A73ECC0C17432EFA348E7F5D770BC338252703`,
-   28.16 ETH depuis `0xe4ee9ed6…`, memo `=:BTC.BTC:bc1q2ckjg8a…:0/10/0`,
-   sortie BTC `5983287f…` (0.80965529, streaming swap 9/9).
-2. **Chemin de valeur unique** (chaque txid re-vérifié byte-exact via mempool.space) :
+1. L'échange initial (visible via l'API midgard de THORChain) est la transaction
+   Ethereum `488A4636CC6F147A0A5D574067A73ECC0C17432EFA348E7F5D770BC338252703`
+   : 28,16 ETH depuis `0xe4ee9ed6…`, mémo `=:BTC.BTC:bc1q2ckjg8a…:0/10/0`, sortie
+   Bitcoin `5983287f…` (0,80965529 BTC, échange progressif 9/9).
+2. **Chemin de valeur unique**, chaque identifiant étant revérifié à l'octet près via
+   mempool.space :
 
    ```
    5983287f → 74caf0e2 → 3f6403ff → d4f8337f → 0f1ade14 → f80b0fb8 → 42b3c8bf → c1ac94f7 → bc1qxn7a
    ```
 
-3. **Hint officiel** publié par l'organisateur :
+3. **Indice officiel** publié par les organisateurs :
 
-   > « N'incluez ni le hash de la transaction THORChain ni celui de la transaction
+   > « N'incluez ni le haché de la transaction THORChain ni celui de la transaction
    > sortante du portefeuille (bc1qxn7a…). »
 
-   → le flag = les **7 transactions intermédiaires** uniquement, virgules sans espaces.
+   Le flag est donc la liste des **sept transactions intermédiaires** uniquement,
+   séparées par des virgules sans espaces.
 
-### Analyse complémentaire (pourquoi c'était piégeux)
+### Pourquoi cette question était piégeuse
 
-- `c1ac94f7` a **3 inputs** : le flux seed 8-tx, la chaîne dominante « DOUT » du vault
-  THORChain (12 txs, memo OP_RETURN `DOUT:…`, swap 137.6 ETH), et de la poussière organique.
-- La chaîne DOUT est **antérieure** au seed (1740226675 < 1740312577) : tout chemin
-  seed→vault→DOUT est non-temporel (artefact d'outil d'analyse).
-- Les deux chemins plausibles (8-tx temporel vs DOUT dominante) ont été rejetés ~160 fois
-  avant le hint officiel.
+- La transaction `c1ac94f7` possède **trois entrées** : le flux principal de huit
+  transactions, la chaîne dominante « DOUT » issue du coffre THORChain (douze
+  transactions, mémo OP_RETURN `DOUT:…`, échange de 137,6 ETH), et de la poussière
+  organique d'avril.
+- La chaîne DOUT est **antérieure** au flux principal (horodatage 1740226675 contre
+  1740312577) : tout chemin passant du flux vers le coffre viole la chronologie — c'est
+  un artefact d'outil d'analyse, pas un flux réel.
+- Les deux chemins plausibles (chronologique et DOUT) ont été longuement explorés avant
+  que l'indice officiel ne tranche le périmètre attendu.
 
-**Leçon** : pour un flag « liste de txids », demander tôt le périmètre exact (inclure le
-seed ? la sortie ?) — l'ambiguïté de format coûte plus que l'analyse on-chain.
+**Leçon** : face à un flag « liste d'identifiants de transactions », clarifier tôt le
+périmètre exact (faut-il inclure la transaction initiale ? la sortie finale ?) —
+l'ambiguïté de format coûte davantage de temps que l'analyse on-chain elle-même.
